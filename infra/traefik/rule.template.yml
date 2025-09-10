@@ -1,0 +1,21 @@
+# Reemplaza PROJECT y DOMAIN al crear cada sitio
+http:
+  routers:
+    PROJECT-wp:
+      rule: Host(`DOMAIN`)
+      entryPoints: [web]
+      service: PROJECT-wp
+    PROJECT-pma:
+      rule: Host(`pma.DOMAIN`)
+      entryPoints: [web]
+      service: PROJECT-pma
+
+  services:
+    PROJECT-wp:
+      loadBalancer:
+        servers:
+          - url: "http://PROJECT-wp:80"
+    PROJECT-pma:
+      loadBalancer:
+        servers:
+          - url: "http://PROJECT-pma:80"

@@ -1,0 +1,25 @@
+version: "3.8"
+
+networks:
+  web:
+    external: true
+
+services:
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    command:
+      - --api.dashboard=true
+      - --api.insecure=true
+      - --entrypoints.web.address=:80
+      - --providers.file.directory=/etc/traefik/dynamic
+      - --providers.file.watch=true
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      # Carpeta local con las reglas dinámicas
+      - ./dynamic:/etc/traefik/dynamic
+    networks:
+      - web
+    restart: always

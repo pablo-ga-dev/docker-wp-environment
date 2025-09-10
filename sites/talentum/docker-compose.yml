@@ -1,0 +1,63 @@
+name: ${PROJECT}
+
+networks:
+  web:
+    external: true
+
+volumes:
+  db_data:
+  wp_html:
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: ${PROJECT}-db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - web
+    restart: always
+
+  wordpress:
+    image: wordpress:latest
+    container_name: ${PROJECT}-wp
+    environment:
+      WORDPRESS_DB_HOST: ${PROJECT}-db:3306
+      WORDPRESS_DB_USER: ${MYSQL_USER}
+      WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD}
+      WORDPRESS_DB_NAME: ${MYSQL_DATABASE}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - wp_html:/var/www/html
+      - ./php/conf.d/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini
+    networks:
+      - web
+    restart: always
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: ${PROJECT}-pma
+    environment:
+      PMA_HOST: ${PROJECT}-db
+      PMA_USER: root
+      PMA_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./php/conf.d/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini
+    networks:
+      - web
+    restart: always

@@ -1,0 +1,22 @@
+# Reemplaza talentum y talentum.test al crear cada sitio
+http:
+  routers:
+    talentum-wp:
+      rule: Host(`talentum.test`)
+      entryPoints: [web]
+      service: talentum-wp
+    talentum-pma:
+      rule: Host(`pma.talentum.test`)
+      entryPoints: [web]
+      service: talentum-pma
+
+  services:
+    talentum-wp:
+      loadBalancer:
+        servers:
+          - url: "http://talentum-wp:80"
+    talentum-pma:
+      loadBalancer:
+        servers:
+          - url: "http://talentum-pma:80"
+
