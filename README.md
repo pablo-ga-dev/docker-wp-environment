@@ -1,202 +1,156 @@
-# 🚀 Entorno WordPress con Docker + Vite + Composer + WP-CLI
+# 🚀 Gestión de instalaciones WordPress con Docker + Traefik
 
-## 📑 Índice
-- [1. Crear nuevo proyecto](#1-crear-nuevo-proyecto)
-- [2. Levantar / detener el stack](#2-levantar--detener-el-stack)
-- [3. Verificar estado](#3-verificar-estado)
-- [4. Acceder a los servicios](#4-acceder-a-los-servicios)
-- [5. WP-CLI](#5-wp-cli)
-- [6. Composer](#6-composer)
-- [7. Node.js / Vite](#7-nodejs--vite)
-- [8. phpMyAdmin](#8-phpmyadmin)
-- [9. Red y Traefik](#9-red-y-traefik)
-- [10. Gestión de plugins](#10-gestión-de-plugins)
-- [11. Logs](#11-logs)
-- [12. Solución de problemas comunes](#12-solución-de-problemas-comunes)
-
----
-
-## 1. Crear nuevo proyecto
-
-Ejecutar script desde la carpeta raíz:
+## 🔧 Preparar Traefik
 
 ```powershell
-.\bin\create-wp.ps1 -Project nombreproyecto
-```
+# Crear red compartida (si no existe)
+docker network create web
 
-Ejemplo:
-```powershell
-.\bin\create-wp.ps1 -Project talentum
-```
+# Arrancar Traefik
+cd C:\Users\pablo\wp\infra\traefik
+docker compose up -d
 
-Esto genera:
-- Carpeta `sites\nombreproyecto`
-- `.env` con credenciales aleatorias
-- Regla dinámica Traefik
-- Entradas en `hosts` (`nombreproyecto.test`, `pma.nombreproyecto.test`)
-- Stack levantado con `docker compose up -d`
+# Ver dashboard
+# http://localhost:8080/dashboard/
 
----
-
-## 2. Levantar / detener el stack
-
-Desde la carpeta del proyecto:
-
-```powershell
-docker compose up -d       # Levantar en segundo plano
-docker compose down        # Parar y eliminar contenedores
-docker compose build       # Reconstruir imágenes
-docker compose restart     # Reiniciar contenedores
+# Recargar reglas (cuando añades un sitio)
+docker restart traefik
 ```
 
 ---
 
-## 3. Verificar estado
+## 🆕 Crear un nuevo sitio
 
 ```powershell
-docker compose ps
-```
-
-Debe mostrar `running` en:
-- `wordpress`
-- `db`
-- `pma` (phpMyAdmin, opcional)
-
----
-
-## 4. Acceder a los servicios
-
-- WordPress: `http://<project>.test`
-- phpMyAdmin: `http://pma.<project>.test`
-
----
-
-## 5. WP-CLI
-
-Ejecutar comandos dentro del contenedor:
-
-```powershell
-docker compose exec -u www-data wordpress wp core version
-docker compose exec -u www-data wordpress wp plugin list
-docker compose exec -u www-data wordpress wp theme list
-```
-
-Instalar WordPress (ejemplo):
-```powershell
-docker compose exec -u www-data wordpress wp core install `
-  --url="http://nombreproyecto.test" `
-  --title="Nombre Proyecto" `
-  --admin_user=admin `
-  --admin_password=admin123 `
-  --admin_email=admin@nombreproyecto.test
+# Desde C:\Users\pablo\wp
+.\bin\create-wp.ps1 -Project escuela             # dominio por defecto: escuela.test
+.\bin\create-wp.ps1 -Project blog -Domain blog.test
 ```
 
 ---
 
-## 6. Composer
-
-Ejemplo en un plugin:
+## ▶️ Arranque / parada / actualización
 
 ```powershell
-docker compose exec -u www-data wordpress bash
-cd /var/www/html/wp-content/plugins/mi-plugin
-composer install
+# Arrancar o recrear con cambios del compose
+docker compose up -d
+
+# Parar y borrar contenedores (mantiene datos)
+docker compose down
+
+# Actualizar a últimas imágenes + recrear
+docker compose pull
+docker compose up -d
 ```
 
 ---
 
-## 7. Node.js / Vite
-
-Comprobar versiones:
+## 🔍 Diagnóstico y gestión
 
 ```powershell
-docker compose exec -u www-data wordpress node -v
-docker compose exec -u www-data wordpress npm -v
-```
+# Ver contenedores
+docker ps
 
-Dentro de un tema:
+# Logs del sitio
+docker compose logs -f
+docker logs escuela-wp -f
+docker logs escuela-db --tail=100
 
-```powershell
-docker compose exec -u www-data wordpress bash
-cd /var/www/html/wp-content/themes/mi-tema
-npm install
-npm run dev    # inicia Vite en modo desarrollo
-npm run build  # genera build para producción
-```
+# Ver variables cargadas por compose (valida .env)
+docker compose --env-file .env config
 
-El puerto `5173` ya está expuesto → acceder en `http://localhost:5173`.
+# Comprobar envs dentro de WP
+docker exec -it escuela-wp env | findstr WORDPRESS_DB
 
----
-
-## 8. phpMyAdmin
-
-Abrir navegador en:
-
-```
-http://pma.<project>.test
-```
-
-Credenciales:
-- **Servidor**: `${PROJECT}-db`
-- **Usuario**: `${MYSQL_USER}`
-- **Contraseña**: `${MYSQL_PASSWORD}`
-
----
-
-## 9. Red y Traefik
-
-Comprobar que los contenedores están en la red `web`:
-
-```powershell
-docker network inspect web
-```
-
-Traefik se reinicia automáticamente al crear un nuevo proyecto, cargando la regla dinámica en `infra/traefik/dynamic/<project>.yml`.
-
----
-
-## 10. Gestión de plugins
-
-Los plugins de la carpeta `templates/wp-site/plugins` se copian automáticamente al volumen de WordPress en cada nuevo proyecto.
-
-Puedes comprobarlo:
-
-```powershell
-docker compose exec -u www-data wordpress ls -l /var/www/html/wp-content/plugins
+# Entrar al contenedor WP / DB
+docker exec -it escuela-wp bash
+docker exec -it escuela-db mysql -u root -p
 ```
 
 ---
 
-## 11. Logs
+## 🧹 Borrar un sitio (con carpeta)
 
 ```powershell
-docker compose logs wordpress
-docker compose logs db
-docker compose logs pma
-```
+cd C:\Users\pablo\wp\sites\escuela
+docker compose down -v                         # borra contenedores y volúmenes (BD)
+Remove-Item -Recurse -Force .                 # borra carpeta del sitio
 
-Para seguir logs en tiempo real:
+# borra regla Traefik y reinicia
+Remove-Item C:\Users\pablo\wp\infra\traefik\dynamic\escuela.yml
+docker restart traefik
 
-```powershell
-docker compose logs -f wordpress
+# limpia hosts
+notepad C:\Windows\System32\drivers\etc\hosts
+# elimina líneas escuela.test / pma.escuela.test
+ipconfig /flushdns
 ```
 
 ---
 
-## 12. Solución de problemas comunes
+## 🧹 Borrar un sitio (sin carpeta)
 
-- **`memory_limit` warning**  
-  Editar `php/conf.d/uploads.ini` → usar `M` en vez de `MB`:  
-  ```ini
-  memory_limit = 1024M
-  ```
+```powershell
+docker rm -f escuela-wp escuela-pma escuela-db
+docker volume ls | findstr escuela
+docker volume rm escuela_wp_data escuela_db_data
+Remove-Item C:\Users\pablo\wp\infra\traefik\dynamic\escuela.yml
+docker restart traefik
+```
 
-- **WP-CLI da error de root**  
-  Ya solucionado en Dockerfile con `--allow-root` o `ENV WP_CLI_ALLOW_ROOT=1`.
+---
 
-- **`hosts` bloqueado**  
-  El script reintenta varias veces. Si aún falla, añadir manualmente:
-  ```
-  127.0.0.1  <project>.test
-  127.0.0.1  pma.<project>.test
-  ```
+## 🖥️ Editar WordPress con VS Code
+
+1. Instala la extensión **Dev Containers** en VS Code.  
+2. Lanza el proyecto con `.\bin\create-wp.ps1`.  
+3. En VS Code abre la paleta de comandos (**Ctrl+Shift+P**) →  
+   `Dev Containers: Attach to Running Container...`.  
+4. Selecciona `<project>-wp` (ejemplo: `escuela-wp`).  
+5. Abre la carpeta `/var/www/html`.  
+
+👉 Ya puedes trabajar directamente **dentro del contenedor**, sin bind mounts en tu Windows.
+
+---
+
+## 📦 Exportar plugins o temas
+
+### Exportar plugin en `.tar.gz`
+Ejemplo con `hld-int`:
+```powershell
+docker exec escuela-wp tar -czf /tmp/hld-int.tar.gz -C /var/www/html/wp-content/plugins hld-int
+docker cp escuela-wp:/tmp/hld-int.tar.gz C:\Users\pablo\Desktop\hld-int.tar.gz
+docker exec escuela-wp rm /tmp/hld-int.tar.gz
+```
+
+### Exportar tema en `.tar.gz`
+Ejemplo con `mi-tema`:
+```powershell
+docker exec escuela-wp tar -czf /tmp/mi-tema.tar.gz -C /var/www/html/wp-content/themes mi-tema
+docker cp escuela-wp:/tmp/mi-tema.tar.gz C:\Users\pablo\Desktop\mi-tema.tar.gz
+docker exec escuela-wp rm /tmp/mi-tema.tar.gz
+```
+
+---
+
+## 📥 Importar plugins o temas
+
+### Importar plugin
+Ejemplo con `mi-plugin.tar.gz` desde el escritorio:
+```powershell
+docker cp C:\Users\pablo\Desktop\mi-plugin.tar.gz escuela-wp:/tmp/
+docker exec escuela-wp tar -xzf /tmp/mi-plugin.tar.gz -C /var/www/html/wp-content/plugins
+docker exec escuela-wp rm /tmp/mi-plugin.tar.gz
+```
+
+### Importar tema
+Ejemplo con `mi-tema.tar.gz`:
+```powershell
+docker cp C:\Users\pablo\Desktop\mi-tema.tar.gz escuela-wp:/tmp/
+docker exec escuela-wp tar -xzf /tmp/mi-tema.tar.gz -C /var/www/html/wp-content/themes
+docker exec escuela-wp rm /tmp/mi-tema.tar.gz
+```
+
+---
+
+✅ De esta forma puedes trabajar directamente dentro del contenedor con VS Code, y usar `.tar.gz` para mover plugins o temas entre tu WordPress local y tu máquina.

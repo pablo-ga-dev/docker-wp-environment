@@ -29,9 +29,7 @@ services:
     restart: always
 
   wordpress:
-    build:
-      context: ./docker/wp
-    image: ${PROJECT}/wordpress-tooling:latest
+    image: wordpress:latest
     container_name: ${PROJECT}-wp
     environment:
       WORDPRESS_DB_HOST: ${PROJECT}-db:3306
@@ -46,8 +44,6 @@ services:
       - ./php/conf.d/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini
     networks:
       - web
-    ports:
-      - "${VITE_PORT:-5173}:5173"
     restart: always
 
   phpmyadmin:
