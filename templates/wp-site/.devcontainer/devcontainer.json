@@ -1,0 +1,40 @@
+{
+  "name": "WP + Tooling",
+  "dockerComposeFile": ["./docker-compose.yml"],
+  "service": "wordpress",
+  "workspaceFolder": "/var/www/html",
+  "remoteUser": "www-data",
+  "overrideCommand": false,
+  "postCreateCommand": ".devcontainer/install-extensions.sh",
+  "runServices": ["db", "wordpress", "phpmyadmin"],
+  "shutdownAction": "stopCompose",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "eamodio.gitlens",
+        "bmewburn.vscode-intelephense-client",
+        "xdebug.php-debug",
+        "esbenp.prettier-vscode",
+        "yzhang.markdown-all-in-one",
+        "Gruntfuggly.todo-tree",
+        "DotJoshJohnson.xml",
+        "EditorConfig.editorconfig",
+        "redhat.vscode-yaml",
+        "streetsidesoftware.code-spell-checker",
+        "mikestead.dotenv",
+        "bradlc.vscode-tailwindcss",
+        "stylelint.vscode-stylelint",
+        "ms-azuretools.vscode-docker",
+        "johnbillion.vscode-wordpress-hooks"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "files.eol": "\n",
+        "php.validate.executablePath": "/usr/local/bin/php",
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+      }
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "recommendations": [
+    "bmewburn.vscode-intelephense-client",
+    "bradlc.vscode-tailwindcss",
+    "dbaeumer.vscode-eslint",
+    "dotjoshjohnson.xml",
+    "eamodio.gitlens",
+    "editorconfig.editorconfig",
+    "esbenp.prettier-vscode",
+    "github.copilot",
+    "github.copilot-chat",
+    "gruntfuggly.todo-tree",
+    "johnbillion.vscode-wordpress-hooks",
+    "mikestead.dotenv",
+    "ms-azuretools.vscode-containers",
+    "ms-azuretools.vscode-docker",
+    "redhat.vscode-yaml",
+    "streetsidesoftware.code-spell-checker",
+    "stylelint.vscode-stylelint",
+    "xdebug.php-debug",
+    "yzhang.markdown-all-in-one"
+  ]
+}

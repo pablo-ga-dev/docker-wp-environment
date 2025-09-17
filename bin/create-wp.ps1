@@ -82,9 +82,10 @@ $envFile   = Join-Path $siteDir ".env"
 $composeYml= Join-Path $siteDir "docker-compose.yml"
 
 # Rutas de plantilla
-$tplDockerDir = Join-Path $templatesSiteDir "docker"
-$tplPhpDir    = Join-Path $templatesSiteDir "php"
-$tplPlugins   = Join-Path $templatesSiteDir "plugins"
+$tplDockerDir    = Join-Path $templatesSiteDir "docker"
+$tplPhpDir       = Join-Path $templatesSiteDir "php"
+$tplPlugins      = Join-Path $templatesSiteDir "plugins"
+$tplDevcontainer = Join-Path $templatesSiteDir ".devcontainer"
 
 # ===== Comprobaciones previas =====
 if (-not (Test-Path $templatesSiteDir))   { throw "No existe la carpeta de plantilla: $templatesSiteDir" }
@@ -98,6 +99,9 @@ New-Item -ItemType Directory -Force $siteDir | Out-Null
 Copy-Item (Join-Path $templatesSiteDir "docker-compose.yml") $composeYml -Force
 Copy-Item $tplPhpDir $siteDir -Recurse -Force
 Copy-Item $tplDockerDir $siteDir -Recurse -Force
+if (Test-Path $tplDevcontainer) {
+  Copy-Item $tplDevcontainer $siteDir -Recurse -Force
+}
 
 # ===== Helpers para encontrar un puerto libre =====
 function Test-PortFree {
