@@ -1,0 +1,31 @@
+# Reemplaza menaki y menaki.test al crear cada sitio
+http:
+  routers:
+    menaki-wp:
+      rule: Host(`menaki.test`)
+      entryPoints: [web]
+      service: menaki-wp
+    menaki-pma:
+      rule: Host(`pma.menaki.test`)
+      entryPoints: [web]
+      service: menaki-pma
+    menaki-vite:
+      rule: Host(`vite.menaki.test`)
+      entryPoints: [web]
+      service: menaki-vite
+
+  services:
+    menaki-wp:
+      loadBalancer:
+        servers:
+          - url: "http://menaki-wp:80"
+    menaki-pma:
+      loadBalancer:
+        servers:
+          - url: "http://menaki-pma:80"
+    menaki-vite:
+      loadBalancer:
+        servers:
+          - url: "http://menaki-wp:5173"
+    
+

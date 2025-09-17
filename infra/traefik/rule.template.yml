@@ -9,6 +9,10 @@ http:
       rule: Host(`pma.DOMAIN`)
       entryPoints: [web]
       service: PROJECT-pma
+    PROJECT-vite:
+      rule: Host(`vite.DOMAIN`)
+      entryPoints: [web]
+      service: PROJECT-vite
 
   services:
     PROJECT-wp:
@@ -19,3 +23,8 @@ http:
       loadBalancer:
         servers:
           - url: "http://PROJECT-pma:80"
+    PROJECT-vite:
+      loadBalancer:
+        servers:
+          - url: "http://PROJECT-wp:5173"
+    
